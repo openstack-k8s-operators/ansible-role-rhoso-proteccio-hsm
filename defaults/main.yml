@@ -21,8 +21,8 @@ cleanup: false
 working_dir: "/tmp/hsm-prep-working-dir"
 
 ### Proteccio Parameters
-proteccio_client_src: "file:///opt/proteccio/Proteccio3.06.05.iso"
 proteccio_client_iso: "Proteccio3.06.05.iso"
+proteccio_client_src: "file:///opt/proteccio/Proteccio3.06.05.iso"
 proteccio_crt_src: "/opt/proteccio/certs/"
 #proteccio_client_crt_src: "file:///opt/proteccio/client.crt"
 #proteccio_client_key_src: "file:///opt/proteccio/client.key"
@@ -34,13 +34,15 @@ login_secret_field: "PKCS11Pin"
 
 ### Image Details
 image_registry_verify_tls: true
+
 barbican_src_image_registry: "quay.io"
 barbican_src_image_namespace: "podified-antelope-centos9"
+barbican_src_api_image_name: "openstack-barbican-api"
+barbican_src_worker_image_name: "openstack-barbican-worker"
 barbican_src_image_tag: "current-podified"
-barbican_src_api_image: "#/barbican_src_image_registry/#/barbican_src_image_namespace/openstack-barbican-api:#/barbican_src_image_tag"
-barbican_src_worker_image: "#/barbican_src_image_registry/#/barbican_src_image_namespace/openstack-barbican-worker:#/barbican_src_image_tag"
+
 barbican_dest_image_registry: "quay.io"
 barbican_dest_image_namespace: "podified-antelope-centos9"
+barbican_dest_api_image_name: "openstack-barbican-api"
+barbican_dest_worker_image_name: "openstack-barbican-worker"
 barbican_dest_image_tag: "current-podified-proteccio"
-barbican_dest_api_image: "#/barbican_dest_image_registry/#/barbican_dest_image_namespace/openstack-barbican-api:#/barbican_dest_image_tag"
-barbican_dest_worker_image: "#/barbican_dest_image_registry/#/barbican_dest_image_namespace/openstack-barbican-worker:#/barbican_dest_image_tag"

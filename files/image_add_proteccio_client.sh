@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# barbican_add_proteccio_client.sh
+# image_add_proteccio_client.sh
 #
 # This script adds the Linux Minimal Client for Eviden Trustway Proteccio HSM
 # to both the API and Worker images so that the HSM can be used as a PKCS#11
@@ -11,15 +11,21 @@ set -o pipefail
 
 BARBICAN_SRC_IMAGE_REGISTRY=${BARBICAN_SRC_IMAGE_REGISTRY:-"quay.io"}
 BARBICAN_SRC_IMAGE_NAMESPACE=${BARBICAN_SRC_IMAGE_NAMESPACE:-"podified-antelope-centos9"}
+BARBICAN_SRC_API_IMAGE_NAME=${BARBICAN_SRC_API_IMAGE_NAME:-"openstack-barbican-api"}
+BARBICAN_SRC_WORKER_IMAGE_NAME=${BARBICAN_SRC_WORKER_IMAGE_NAME:-"openstack-barbican-worker"}
 BARBICAN_SRC_IMAGE_TAG=${BARBICAN_SRC_IMAGE_TAG:-"current-podified"}
-BARBICAN_SRC_API_IMAGE="$BARBICAN_SRC_IMAGE_REGISTRY/$BARBICAN_SRC_IMAGE_NAMESPACE/openstack-barbican-api:$BARBICAN_SRC_IMAGE_TAG"
-BARBICAN_SRC_WORKER_IMAGE="$BARBICAN_SRC_IMAGE_REGISTRY/$BARBICAN_SRC_IMAGE_NAMESPACE/openstack-barbican-worker:$BARBICAN_SRC_IMAGE_TAG"
+
+BARBICAN_SRC_API_IMAGE_FQIN="$BARBICAN_SRC_IMAGE_REGISTRY/$BARBICAN_SRC_IMAGE_NAMESPACE/$BARBICAN_SRC_API_IMAGE_NAME:$BARBICAN_SRC_IMAGE_TAG"
+BARBICAN_SRC_WORKER_IMAGE_FQIN="$BARBICAN_SRC_IMAGE_REGISTRY/$BARBICAN_SRC_IMAGE_NAMESPACE/$BARBICAN_SRC_WORKER_IMAGE_NAME:$BARBICAN_SRC_IMAGE_TAG"
 
 BARBICAN_DEST_IMAGE_REGISTRY=${BARBICAN_DEST_IMAGE_REGISTRY:-"quay.io"}
-BARBICAN_DEST_IMAGE_NAMESPACE=${BARBICAN_DEST_IMAGE_NAMESPACE:-"rh_ee_mharley"}
-BARBICAN_DEST_IMAGE_TAG=${BARBICAN_DEST_IMAGE_TAG:-"current-podified"}
-BARBICAN_DEST_API_IMAGE="$BARBICAN_DEST_IMAGE_REGISTRY/$BARBICAN_DEST_IMAGE_NAMESPACE/openstack-barbican-api:$BARBICAN_DEST_IMAGE_TAG"
-BARBICAN_DEST_WORKER_IMAGE="$BARBICAN_DEST_IMAGE_REGISTRY/$BARBICAN_DEST_IMAGE_NAMESPACE/openstack-barbican-worker:$BARBICAN_DEST_IMAGE_TAG"
+BARBICAN_DEST_IMAGE_NAMESPACE=${BARBICAN_DEST_IMAGE_NAMESPACE:-"podified-antelope-centos9"}
+BARBICAN_DEST_API_IMAGE_NAME=${BARBICAN_DEST_API_IMAGE_NAME:-"openstack-barbican-api"}
+BARBICAN_DEST_WORKER_IMAGE_NAME=${BARBICAN_DEST_WORKER_IMAGE_NAME:-"openstack-barbican-worker"}
+BARBICAN_DEST_IMAGE_TAG=${BARBICAN_DEST_IMAGE_TAG:-"current-podified-proteccio"}
+
+BARBICAN_DEST_API_IMAGE_FQIN="$BARBICAN_DEST_IMAGE_REGISTRY/$BARBICAN_DEST_IMAGE_NAMESPACE/$BARBICAN_DEST_API_IMAGE_NAME:$BARBICAN_DEST_IMAGE_TAG"
+BARBICAN_DEST_WORKER_IMAGE_FQIN="$BARBICAN_DEST_IMAGE_REGISTRY/$BARBICAN_DEST_IMAGE_NAMESPACE/$BARBICAN_DEST_WORKER_IMAGE_NAME:$BARBICAN_DEST_IMAGE_TAG"
 
 # PROTECCIO_LINUX_CLIENT_DIR - location of the linux client directory
 # in your client media.  This could be a path to a mounted ISO or a path to
@@ -44,6 +50,7 @@ function install_client() {
   buildah add --chown root:root $container $PROTECCIO_LINUX_CLIENT_DIR /tmp/proteccio
   buildah run --user root $container -- cd /tmp/proteccio/Linux
   buildah run --user root $container -- bash -c "cd /tmp/proteccio/Linux; { echo \"e\"; echo \"n\"; echo; } | ./install.sh"
+  buildah run --user root $container -- rm -rf /tmp/proteccio
 
   if [ "$VERIFY_TLS" == "true" ]; then
     buildah commit $container $2
@@ -55,5 +62,5 @@ function install_client() {
   buildah rm $container
 }
 
-install_client $BARBICAN_SRC_API_IMAGE $BARBICAN_DEST_API_IMAGE
-install_client $BARBICAN_SRC_WORKER_IMAGE $BARBICAN_DEST_WORKER_IMAGE
+install_client $BARBICAN_SRC_API_IMAGE_FQIN $BARBICAN_DEST_API_IMAGE_FQIN
+install_client $BARBICAN_SRC_WORKER_IMAGE_FQIN $BARBICAN_DEST_WORKER_IMAGE_FQIN
