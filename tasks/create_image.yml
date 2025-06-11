@@ -14,6 +14,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+- name: Download build tools
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - buildah
+      - podman
+    state: present
+
 - name: Create working directory
   ansible.builtin.file:
     path: "{{ working_dir }}"
@@ -23,54 +31,62 @@
 - name: Get Proteccio client ISO
   ansible.builtin.get_url:
     url: "{{ proteccio_client_src }}"
-    dest: "{{ working_dir }}/"
+    dest: "{{ working_dir }}/{{ proteccio_client_iso }}"
     mode: '644'
-    force: false
+
+- name: Get stats for mount point
+  ansible.builtin.stat:
+    path: /mnt/proteccio_iso
+  register: st
+
+- name: Ensure mount point exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/proteccio_iso
+    state: directory
+    mode: '755'
+  when: not st.stat.exists
 
 - name: Mount the ISO image
-  ansible.posix.mount:
-    path: /mnt/proteccio_iso
-    src: "{{ working_dir }}/{{ proteccio_client_iso }}"
-    fstype: iso9660
-    state: mounted
-
-- name: Download build tools
   become: true
-  ansible.builtin.dnf:
-    name:
-      - buildah
-      - podman
-    state: present
+  ansible.builtin.command:
+    cmd: "mount -t iso9660 -o loop,ro {{ proteccio_client_iso|quote }} /mnt/proteccio_iso"
+    chdir: "{{ working_dir }}"
+  when: "'/mnt/proteccio_iso' is not mount"
 
 - name: Create and store new images
   ansible.builtin.script: "image_add_proteccio_client.sh"
   environment:
     BARBICAN_SRC_IMAGE_REGISTRY: "{{ barbican_src_image_registry }}"
     BARBICAN_SRC_IMAGE_NAMESPACE: "{{ barbican_src_image_namespace }}"
+    BARBICAN_SRC_API_IMAGE_NAME: "{{ barbican_src_api_image_name }}"
+    BARBICAN_SRC_WORKER_IMAGE_NAME: "{{ barbican_src_worker_image_name }}"
     BARBICAN_SRC_IMAGE_TAG: "{{ barbican_src_image_tag }}"
-    BARBICAN_SRC_API_IMAGE: " {{ barbican_src_api_image }}"
-    BARBICAN_SRC_WORKER_IMAGE: " {{ barbican_src_worker_image }}"
     BARBICAN_DEST_IMAGE_REGISTRY: "{{ barbican_dest_image_registry }}"
     BARBICAN_DEST_IMAGE_NAMESPACE: "{{ barbican_dest_image_namespace }}"
+    BARBICAN_DEST_API_IMAGE_NAME: "{{ barbican_dest_api_image_name }}"
+    BARBICAN_DEST_WORKER_IMAGE_NAME: "{{ barbican_dest_worker_image_name }}"
     BARBICAN_DEST_IMAGE_TAG: "{{ barbican_dest_image_tag }}"
-    BARBICAN_DEST_API_IMAGE: " {{ barbican_dest_api_image }}"
-    BARBICAN_DEST_WORKER_IMAGE: " {{ barbican_dest_worker_image }}"
     VERIFY_TLS: "{{ image_registry_verify_tls }}"
-
-- name: Unmount the ISO image
-  ansible.posix.mount:
-    path: /mnt/proteccio_iso
-    src: "{{ working_dir }}/{{ proteccio_client_iso }}"
-    fstype: iso9660
-    state: unmounted
 
 - name: Perform cleanup tasks
   when:
     - cleanup | bool
   block:
+    - name: Unmount the ISO image
+      become: true
+      ansible.builtin.command:
+        cmd: "umount /mnt/proteccio_iso"
+      when: "'/mnt/proteccio_iso' is mount"
+
+    - name: Remove mount point directory
+      become: true
+      ansible.builtin.file:
+        path: '/mnt/proteccio_iso'
+        state: absent
+
     - name: Remove the working directory
       become: true
       ansible.builtin.file:
         path: "{{ working_dir }}"
         state: absent
-

@@ -9,24 +9,25 @@ The purpose of this role is to:
 * Create any required config to be mounted by the Barbican images for connecting to the HSMs.
 
 We expect some preparatory steps to be completed prior to execution in order for the role to complete successfully:
-* The Proteccio Client ISO file has been obtained from Eviden:
-* The location of the Proteccio Client ISO file should be made available at proteccio_client_src.
-* All of the certificates and keys needed to communicate with the HSM(s) must be copied to the proteccio_crt_src directory.
-  * These include the server certificates, which typically have the format <ip_address>.crt.
-  * These also include the client certificate and key, which typically have the format <client_name>.crt and <client_name>.key.
+* The Proteccio Client ISO file has been obtained from Eviden.
+* The location of the Proteccio Client ISO file should be made available at `proteccio_client_src`.
+* All of the certificates and keys needed to communicate with the HSM(s) must be copied to the `proteccio_crt_src` directory.
+  * These include the server certificates, which typically have the format `<ip_address>.crt`.
+  * These also include the client certificate and key, which typically have the format `<client_name>.crt` and `<client_name>.key`.
   * All these files will ultimately be referenced in your proteccio.rc file.
-* The proteccio.rc is available at proteccio_conf_src.
+* The proteccio.rc is available at `proteccio_conf_src`.
 * The certs and proteccio.rc will be retrieved from the given locations and stored in a secret (proteccio_data_secret).
 * The PIN (password) to log into the HSM will be stored in a secret (login_secret).
 
 A minimal (one that takes the defaults) invocation of this role is shown below.  In this case, the Proteccio Client
-software and required certificates and configuration files are stored locally under /opt/proteccio.
+software and required certificates and configuration files are stored locally under `/opt/proteccio`.
 
     ---
     - hosts: localhost
       vars:
         barbican_dest_image_namespace: "{{ your quay.io account name }}"
-        proteccio_client_src: "file:///opt/proteccio/Proteccio3.06.05.iso"
+        proteccio_client_iso: "Proteccio3.06.05.iso"
+        proteccio_client_src: "file:///opt/proteccio/{{ proteccio_client_iso }}"
         proteccio_password: "{{ PIN to log into proteccio }}"
         kubeconfig_path: "/path/to/.kube/config"
         oc_dir: "/path/to/oc/bin/dir/"
@@ -39,7 +40,8 @@ You can also do the steps separately.
     - hosts: localhost
       vars:
         barbican_dest_image_namespace: "{{ your quay.io account name }}"
-        proteccio_client_src: "file:///opt/proteccio/Proteccio3.06.05.iso"
+        proteccio_client_iso: "Proteccio3.06.05.iso"
+        proteccio_client_src: "file:///opt/proteccio/{{ proteccio_client_iso }}"
        tasks:
        - name: Create new Barbican images with the Proteccio Client
          ansible.builtin.include_role:
@@ -67,16 +69,21 @@ You can also do the steps separately.
 | `working_dir` | string  | `/tmp/hsm-prep-working-dir` | Working directory to store artifacts.                           |
 
 ### Image Generation Variables
-| Variable                        | Type    | Default Value                                | Description                                      |
-| ------------------------------- | ------- | ---------------------------------------------| ------------------------------------------------ |
-| `barbican_src_image_registry`   | string  | `quay.io`                                    | Registry used to pull down the Barbican images   |
-| `barbican_src_image_namespace`  | string  | `podified-antelope-centos9`                  | Registry namespace for the Barbican images       |
-| `barbican_src_image_tag`        | string  | `current-podified`                           | Tag used to identify the source images           |
-| `barbican_dest_image_registry`  | string  | `quay.io`                                    | Registry used to push the modified images        |
-| `barbican_dest_image_namespace` | string  | `podified-antelope-centos9`                  | Registry namespace for the modified images       |
-| `barbican_dest_image_tag`       | string  | `current-podified-proteccio`                 | Tag used to identify the modified images         |
-| `proteccio_client_src`          | string  | `file:///opt/proteccio/Proteccio3.06.05.iso` | Location of the Proteccio Client ISO file        |
-| `image_registry_verify_tls`     | boolean | `true`                                       | Use TLS verification when pushing/pulling images |
+| Variable                          | Type    | Default Value                                | Description                                      |
+| -------------------------------   | ------- | ---------------------------------------------| ------------------------------------------------ |
+| `proteccio_client_iso`            | string  | `Proteccio3.06.05.iso`                       | File name of the Proteccio Client ISO file       |
+| `proteccio_client_src`            | string  | `file:///opt/proteccio/Proteccio3.06.05.iso` | Location of the Proteccio Client ISO file        |
+| `barbican_src_image_registry`     | string  | `quay.io`                                    | Registry used to pull down the Barbican images   |
+| `barbican_src_image_namespace`    | string  | `podified-antelope-centos9`                  | Registry namespace for the Barbican images       |
+| `barbican_src_api_image_name`     | string  | `openstack-barbican-api`                     | Name of the Barbican API image to be pulled      |
+| `barbican_src_worker_image_name`  | string  | `openstack-barbican-worker`                  | Name of the Barbican Worker image to be pulled   |
+| `barbican_src_image_tag`          | string  | `current-podified`                           | Tag used to identify the source images           |
+| `barbican_dest_image_registry`    | string  | `quay.io`                                    | Registry used to push the modified images        |
+| `barbican_dest_image_namespace`   | string  | `podified-antelope-centos9`                  | Registry namespace for the modified images       |
+| `barbican_dest_api_image_name`    | string  | `openstack-barbican-api`                     | Name of the Barbican API image to be pushed      |
+| `barbican_dest_worker_image_name` | string  | `openstack-barbican-worker`                  | Name of the Barbican Worker image to be pushed   |
+| `barbican_dest_image_tag`         | string  | `current-podified-proteccio`                 | Tag used to identify the modified images         |
+| `image_registry_verify_tls`       | boolean | `true`                                       | Use TLS verification when pushing/pulling images |
 
 ### Secret Generation Variables
 | Variable                          | Type   | Default Value                                  | Description                                                                                   |
