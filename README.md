@@ -92,7 +92,9 @@ You can also do the steps separately.
 | `oc_dir`                          | string | None                                           | Full path to the directory containing the `oc` command binary. e.g. `/home/user/.crc/bin/oc/` |
 | `proteccio_password`              | string | None                                           | Password (SO PIN) used to log into the HSM                                                    |
 | `proteccio_conf_src`              | string | `file:///opt/proteccio/proteccio.rc`           | Full path to the proteccio.rc file                                                            |
-| `proteccio_crt_src`               | string | `/opt/proteccio/certs`                         | Full path to the HSM certificate(s) and client's certificate and key                          |
+| `proteccio_client_crt_src`        | string | `file:///opt/proteccio/certs/client.crt`       | Full path to the TLS Client certificate file                                                  |
+| `proteccio_client_key_src`        | string | `file:///opt/proteccio/certs/client.key`       | Full path to the private key file associated with the Client certificate file                 |
+| `proteccio_server_crt_src`        | string | `file:///opt/proteccio/certs/proteccio.crt`    | Full path to the TLS Server Certificate file                                                  |
 | `proteccio_data_secret`           | string | `proteccio-data`                               | Name of the secret used to store client and server certificates                               |
 | `proteccio_data_secret_namespace` | string | `openstack`                                    | Namespace to be used when creating `proteccio_data_secret`                                    |
 | `login_secret`                    | string | `hsm-login`                                    | Name of the secret used to store the password to log into the HSM                             |
