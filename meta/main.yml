@@ -1,0 +1,25 @@
+---
+galaxy_info:
+  role_name: rhoso_proteccio_hsm
+  author: Mauricio Harley
+  description: Ansible role to integrate Eviden Trustway Proteccio HSM with RHOSO
+  company: Red Hat
+  
+  license: Apache-2.0
+  
+  min_ansible_version: "2.14"
+  
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+  
+  galaxy_tags:
+    - openstack
+    - rhoso
+    - barbican
+    - hsm
+    - proteccio
+
+dependencies: []
