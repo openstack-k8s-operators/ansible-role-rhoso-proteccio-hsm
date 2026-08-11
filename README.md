@@ -28,7 +28,7 @@ software and required certificates and configuration files are stored locally un
         barbican_dest_image_namespace: "{{ your quay.io account name }}"
         proteccio_client_iso: "Proteccio3.06.05.iso"
         proteccio_client_src: "file:///opt/proteccio/{{ proteccio_client_iso }}"
-        proteccio_password: "{{ PIN to log into proteccio }}"
+        proteccio_password: "{{ lookup('env', 'PROTECCIO_PASSWORD') }}"
         kubeconfig_path: "/path/to/.kube/config"
         oc_dir: "/path/to/oc/bin/dir/"
       roles:
@@ -51,7 +51,7 @@ You can also do the steps separately.
     ---
     - hosts: localhost
       vars:
-        proteccio_password: "{{ PIN to log into proteccio }}"
+        proteccio_password: "{{ lookup('env', 'PROTECCIO_PASSWORD') }}"
         kubeconfig_path: "/path/to/.kube/config"
         oc_dir: "/path/to/oc/bin/dir/"
       tasks:
@@ -101,6 +101,10 @@ You can also do the steps separately.
 | `proteccio_data_secret_namespace` | string | `openstack`                                     | Namespace to be used when creating `proteccio_data_secret`                                    |
 | `login_secret`                    | string | `hsm-login`                                     | Name of the secret used to store the password to log into the HSM                             |
 | `login_secret_field`              | string | `PKCS11Pin`                                     | Secret key used to store the `proteccio_password` data in `login_secret`                      |
+
+> Security note: do not store `proteccio_password` in plaintext vars files.
+> Use Ansible Vault or an environment lookup (for example,
+> `proteccio_password: "{{ lookup('env', 'PROTECCIO_PASSWORD') }}"`).
 
 ## The `proteccio.rc` configuration file
 
