@@ -28,7 +28,7 @@ software and required certificates and configuration files are stored locally un
         barbican_dest_image_namespace: "{{ your quay.io account name }}"
         proteccio_client_iso: "Proteccio3.06.05.iso"
         proteccio_client_src: "file:///opt/proteccio/{{ proteccio_client_iso }}"
-        proteccio_password: "{{ PIN to log into proteccio }}"
+        proteccio_password: "{{ lookup('env', 'PROTECCIO_PASSWORD') }}"
         kubeconfig_path: "/path/to/.kube/config"
         oc_dir: "/path/to/oc/bin/dir/"
       roles:
@@ -51,7 +51,7 @@ You can also do the steps separately.
     ---
     - hosts: localhost
       vars:
-        proteccio_password: "{{ PIN to log into proteccio }}"
+        proteccio_password: "{{ lookup('env', 'PROTECCIO_PASSWORD') }}"
         kubeconfig_path: "/path/to/.kube/config"
         oc_dir: "/path/to/oc/bin/dir/"
       tasks:
@@ -63,10 +63,10 @@ You can also do the steps separately.
 ## Role Variables
 
 ### Role Parameters
-| Variable      | Type    | Default Value               | Description                                                     |
-| ------------- | ------- | --------------------------- | --------------------------------------------------------------- |
-| `cleanup`     | boolean | `false`                     | Delete all resources created by the role at the end of the run. |
-| `working_dir` | string  | `/tmp/hsm-prep-working-dir` | Working directory to store artifacts.                           |
+| Variable      | Type    | Default Value | Description                                                                 |
+| ------------- | ------- | ------------- | --------------------------------------------------------------------------- |
+| `cleanup`     | boolean | `true`        | Delete staging artifacts created by the role (runs in an `always` block).   |
+| `working_dir` | string  | `""` (empty)  | Staging directory. Empty allocates a private tempfile (`0700`). If set, the path must not already exist. |
 
 ### Image Generation Variables
 | Variable                          | Type    | Default Value                                | Description                                      |
@@ -77,7 +77,9 @@ You can also do the steps separately.
 | `barbican_src_image_namespace`    | string  | `podified-antelope-centos9`                  | Registry namespace for the Barbican images       |
 | `barbican_src_api_image_name`     | string  | `openstack-barbican-api`                     | Name of the Barbican API image to be pulled      |
 | `barbican_src_worker_image_name`  | string  | `openstack-barbican-worker`                  | Name of the Barbican Worker image to be pulled   |
-| `barbican_src_image_tag`          | string  | `current-podified`                           | Tag used to identify the source images           |
+| `barbican_src_image_tag`          | string  | `current-podified`                           | Tag used when digests are unset                  |
+| `barbican_src_api_image_digest`   | string  | `""` (empty)                                 | Optional `sha256:<hex>` (or bare hex) to pin API |
+| `barbican_src_worker_image_digest`| string  | `""` (empty)                                 | Optional `sha256:<hex>` (or bare hex) to pin Worker |
 | `barbican_dest_image_registry`    | string  | `quay.io`                                    | Registry used to push the modified images        |
 | `barbican_dest_image_namespace`   | string  | `podified-antelope-centos9`                  | Registry namespace for the modified images       |
 | `barbican_dest_api_image_name`    | string  | `openstack-barbican-api`                     | Name of the Barbican API image to be pushed      |
@@ -99,6 +101,10 @@ You can also do the steps separately.
 | `proteccio_data_secret_namespace` | string | `openstack`                                     | Namespace to be used when creating `proteccio_data_secret`                                    |
 | `login_secret`                    | string | `hsm-login`                                     | Name of the secret used to store the password to log into the HSM                             |
 | `login_secret_field`              | string | `PKCS11Pin`                                     | Secret key used to store the `proteccio_password` data in `login_secret`                      |
+
+> Security note: do not store `proteccio_password` in plaintext vars files.
+> Use Ansible Vault or an environment lookup (for example,
+> `proteccio_password: "{{ lookup('env', 'PROTECCIO_PASSWORD') }}"`).
 
 ## The `proteccio.rc` configuration file
 
